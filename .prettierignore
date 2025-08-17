@@ -1,0 +1,6 @@
+# Prettier ignore patterns
+node_modules
+build
+dist
+.env
+*.log

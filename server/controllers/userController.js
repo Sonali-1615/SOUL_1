@@ -10,8 +10,9 @@ module.exports.login = async (req, res, next) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid)
       return res.json({ msg: "Incorrect Username or Password", status: false });
-    delete user.password;
-    return res.json({ status: true, user });
+    const userObj = user.toObject();
+    delete userObj.password;
+    return res.json({ status: true, user: userObj });
   } catch (ex) {
     next(ex);
   }
@@ -32,8 +33,9 @@ module.exports.register = async (req, res, next) => {
       username,
       password: hashedPassword,
     });
-    delete user.password;
-    return res.json({ status: true, user });
+    const userObj = user.toObject();
+    delete userObj.password;
+    return res.json({ status: true, user: userObj });
   } catch (ex) {
     next(ex);
   }

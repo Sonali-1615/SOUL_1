@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { LOCALHOST_KEY } from "../utils/constants";
 import styled from "styled-components";
 import Logo from "../assets/logo.svg";
 
@@ -6,27 +7,41 @@ export default function Contacts({ contacts, changeChat }) {
   const [currentUserName, setCurrentUserName] = useState(undefined);
   const [currentUserImage, setCurrentUserImage] = useState(undefined);
   const [currentSelected, setCurrentSelected] = useState(undefined);
-  useEffect(async () => {
-    const data = await JSON.parse(
-      localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
-    );
-    setCurrentUserName(data.username);
-    setCurrentUserImage(data.avatarImage);
+  // Bot avatar SVG (simple robot icon base64)
+  const botAvatar = "PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB4PSIxMiIgeT0iMjQiIHdpZHRoPSI0MCIgaGVpZ2h0PSIyMCIgZmlsbD0iI0ZGRiIgcng9IjEwIi8+PHJlY3QgeD0iMjAiIHk9IjE2IiB3aWR0aD0iMjQiIGhlaWdodD0iOCIgcng9IjQiIGZpbGw9IiM5QTg2RjMiLz48Y2lyY2xlIGN4PSIyMCIgY3k9IjM0IiByPSIzIiBmaWxsPSIjMDAwIi8+PGNpcmNsZSBjeD0iNDQiIGN5PSIzNCIgcj0iMyIgZmlsbD0iIzAwMCIvPjwvc3ZnPg==";
+  const botContact = {
+    _id: "SOUL_BOT",
+    username: "SOUL Bot",
+    avatarImage: botAvatar,
+  };
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const data = await JSON.parse(localStorage.getItem(LOCALHOST_KEY));
+        setCurrentUserName(data.username);
+        setCurrentUserImage(data.avatarImage);
+      } catch (err) {
+        alert("Failed to load user info. Please login again.");
+      }
+    };
+    fetchUser();
   }, []);
   const changeCurrentChat = (index, contact) => {
     setCurrentSelected(index);
     changeChat(contact);
   };
+  // Add bot as the first contact
+  const allContacts = [botContact, ...contacts];
   return (
     <>
-      {currentUserImage && currentUserImage && (
+      {currentUserImage && (
         <Container>
           <div className="brand">
             <img src={Logo} alt="logo" />
-            <h3>snappy</h3>
+            <h3>SOUL</h3>
           </div>
           <div className="contacts">
-            {contacts.map((contact, index) => {
+            {allContacts.map((contact, index) => {
               return (
                 <div
                   key={contact._id}

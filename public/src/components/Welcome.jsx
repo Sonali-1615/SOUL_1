@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from "react";
+import { LOCALHOST_KEY } from "../utils/constants";
 import styled from "styled-components";
 import Robot from "../assets/robot.gif";
 export default function Welcome() {
   const [userName, setUserName] = useState("");
-  useEffect(async () => {
-    setUserName(
-      await JSON.parse(
-        localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
-      ).username
-    );
+  useEffect(() => {
+    const fetchUserName = async () => {
+      try {
+        const user = await JSON.parse(localStorage.getItem(LOCALHOST_KEY));
+        setUserName(user.username);
+      } catch (err) {
+        setUserName("");
+      }
+    };
+    fetchUserName();
   }, []);
   return (
     <Container>

@@ -6,6 +6,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 import { setAvatarRoute } from "../utils/APIRoutes";
+import { LOCALHOST_KEY } from "../utils/constants";
 import multiavatar from "@multiavatar/multiavatar/esm";
 
 export default function SetAvatar() {
@@ -23,8 +24,8 @@ export default function SetAvatar() {
   };
 
   useEffect(() => {
-    const user = localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY);
-    if (!user) navigate("/login");
+  const user = localStorage.getItem(LOCALHOST_KEY);
+  if (!user) navigate("/login");
   }, [navigate]);
 
   const generateRandomName = () => Math.random().toString(36).substring(2, 10);
@@ -52,7 +53,7 @@ export default function SetAvatar() {
     }
 
     const user = await JSON.parse(
-      localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
+      localStorage.getItem(LOCALHOST_KEY)
     );
 
     const { data } = await axios.post(`${setAvatarRoute}/${user._id}`, {
@@ -63,7 +64,7 @@ export default function SetAvatar() {
       user.isAvatarImageSet = true;
       user.avatarImage = data.image;
       localStorage.setItem(
-        process.env.REACT_APP_LOCALHOST_KEY,
+        LOCALHOST_KEY,
         JSON.stringify(user)
       );
       navigate("/");

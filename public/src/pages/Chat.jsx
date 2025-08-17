@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { LOCALHOST_KEY } from "../utils/constants";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
@@ -14,16 +15,15 @@ export default function Chat() {
   const [contacts, setContacts] = useState([]);
   const [currentChat, setCurrentChat] = useState(undefined);
   const [currentUser, setCurrentUser] = useState(undefined);
-  useEffect(async () => {
-    if (!localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)) {
-      navigate("/login");
-    } else {
-      setCurrentUser(
-        await JSON.parse(
-          localStorage.getItem(process.env.REACT_APP_LOCALHOST_KEY)
-        )
-      );
-    }
+  useEffect(() => {
+    const checkUser = async () => {
+      if (!localStorage.getItem(LOCALHOST_KEY)) {
+        navigate("/login");
+      } else {
+        setCurrentUser(await JSON.parse(localStorage.getItem(LOCALHOST_KEY)));
+      }
+    };
+    checkUser();
   }, []);
   useEffect(() => {
     if (currentUser) {
@@ -32,15 +32,22 @@ export default function Chat() {
     }
   }, [currentUser]);
 
-  useEffect(async () => {
-    if (currentUser) {
-      if (currentUser.isAvatarImageSet) {
-        const data = await axios.get(`${allUsersRoute}/${currentUser._id}`);
-        setContacts(data.data);
-      } else {
-        navigate("/setAvatar");
+  useEffect(() => {
+    const fetchContacts = async () => {
+      if (currentUser) {
+        if (currentUser.isAvatarImageSet) {
+          try {
+            const data = await axios.get(`${allUsersRoute}/${currentUser._id}`);
+            setContacts(data.data);
+          } catch (err) {
+            alert("Failed to load contacts. Please try again.");
+          }
+        } else {
+          navigate("/setAvatar");
+        }
       }
-    }
+    };
+    fetchContacts();
   }, [currentUser]);
   const handleChatChange = (chat) => {
     setCurrentChat(chat);
