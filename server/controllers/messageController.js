@@ -31,12 +31,20 @@ module.exports.reactToMessage = async (req, res, next) => {
     const { messageId, userId, emoji } = req.body;
     const message = await Messages.findById(messageId);
     if (!message) return res.status(404).json({ msg: "Message not found" });
-    // Remove existing reaction by this user (if any)
-    message.reactions = message.reactions.filter(r => r.user.toString() !== userId);
-    // If emoji is not empty, add new reaction
-    if (emoji) {
+
+    // Toggle: If user already reacted with this emoji, remove it. Otherwise, add it.
+    const existingIndex = message.reactions.findIndex(
+      (r) => r.user.toString() === userId && r.emoji === emoji
+    );
+
+    if (existingIndex !== -1) {
+      // Remove this emoji reaction by this user
+      message.reactions.splice(existingIndex, 1);
+    } else {
+      // Add this emoji reaction by this user
       message.reactions.push({ user: userId, emoji });
     }
+
     await message.save();
     res.json({ msg: "Reaction updated", reactions: message.reactions });
   } catch (ex) {

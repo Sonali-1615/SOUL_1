@@ -2,6 +2,7 @@
   "dependencies": {
     "dotenv": "^17.2.1",
     "helmet": "^8.1.0",
+    "multer": "^2.0.2",
     "openai": "^4.104.0"
   }
 }

@@ -1,12 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import axios from "axios";
 import { BsEmojiSmileFill } from "react-icons/bs";
 import { IoMdSend } from "react-icons/io";
+import { FaPaperclip } from "react-icons/fa";
 import styled from "styled-components";
 import Picker from "emoji-picker-react";
 
-export default function ChatInput({ handleSendMsg }) {
+export default function ChatInput({ handleSendMsg, socket, currentChat, userId }) {
   const [msg, setMsg] = useState("");
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const fileInputRef = useRef();
+
   const handleEmojiPickerhideShow = () => {
     setShowEmojiPicker(!showEmojiPicker);
   };
@@ -17,12 +21,54 @@ export default function ChatInput({ handleSendMsg }) {
     setMsg(message);
   };
 
+  // Typing indicator logic
+  let typingTimeout = null;
+  const sendTyping = () => {
+    if (socket && socket.current && currentChat && userId) {
+      socket.current.emit("typing", { to: currentChat._id, from: userId });
+      if (typingTimeout) clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        socket.current.emit("stop-typing", { to: currentChat._id, from: userId });
+      }, 1500);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setMsg(e.target.value);
+    sendTyping();
+  };
+
   const sendChat = (event) => {
     event.preventDefault();
     if (msg.length > 0) {
       handleSendMsg(msg);
       setMsg("");
+      if (socket && socket.current && currentChat && userId) {
+        socket.current.emit("stop-typing", { to: currentChat._id, from: userId });
+      }
     }
+  };
+
+  // File upload handler
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await axios.post("/api/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      // Send file message (as a special message type)
+      handleSendMsg({ file: res.data.url, filename: res.data.originalname, mimetype: res.data.mimetype });
+    } catch (err) {
+      alert("Failed to upload file.");
+    }
+    e.target.value = ""; // reset for next upload
+  };
+
+  const onAttachClick = () => {
+    fileInputRef.current.click();
   };
 
   return (
@@ -32,12 +78,28 @@ export default function ChatInput({ handleSendMsg }) {
           <BsEmojiSmileFill onClick={handleEmojiPickerhideShow} />
           {showEmojiPicker && <Picker onEmojiClick={handleEmojiClick} />}
         </div>
+        {/* File upload button */}
+        <button
+          className="attach-btn"
+          title="Attach Image"
+          type="button"
+          onClick={onAttachClick}
+        >
+          <FaPaperclip />
+        </button>
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          onChange={handleFileChange}
+        />
       </div>
-      <form className="input-container" onSubmit={(event) => sendChat(event)}>
+      <form className="input-container" onSubmit={sendChat}>
         <input
           type="text"
           placeholder="type your message here"
-          onChange={(e) => setMsg(e.target.value)}
+          onChange={handleInputChange}
           value={msg}
         />
         <button type="submit">
@@ -95,6 +157,23 @@ const Container = styled.div`
         .emoji-group:before {
           background-color: #080420;
         }
+      }
+    }
+    .attach-btn {
+      background: transparent;
+      border: none;
+      color: #ffe600;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+      margin: 0 0.2rem;
+      &:hover,
+      &:focus {
+        color: #fff176;
+        outline: none;
       }
     }
   }
